@@ -180,7 +180,8 @@ namespace Application.Services.Services
                                               {
                                                   p.Id,
                                                   p.HallNumber,
-                                                  ClassName = p.Class.Name
+                                                  ClassName = p.Class.Name,
+                                                  p.PlaceNumber
                                               })
                                               .ToListAsync();
             var MaxHall = await context.Student.AsNoTracking().Where(p => p.Class.SchoolId == SchoolId).MaxAsync(p => p.HallNumber);
@@ -190,6 +191,7 @@ namespace Application.Services.Services
                 for (int i = 1; i <= MaxHall; i++)
                 {
                     var sts = Students.Where(p => p.ClassName == ClassName && p.HallNumber == i).ToList();
+                    if (sts.Count == 0) continue;
                     Result.Add(new HallSammryData()
                     {
                         HallNumber = i,
@@ -197,8 +199,8 @@ namespace Application.Services.Services
                         CM = CM.Name,
                         SM = SM.Name,
                         SchoolName = School.Name,
-                        From = sts.Min(p => p.HallNumber),
-                        To = sts.Max(p => p.HallNumber),
+                        From = sts.Min(p => p.PlaceNumber),
+                        To = sts.Max(p => p.PlaceNumber),
                         StudentsCount = sts.Count()
                     });
                 }
