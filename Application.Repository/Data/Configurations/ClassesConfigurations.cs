@@ -1,0 +1,23 @@
+﻿﻿    using Application.Core.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Application.Repository.Data.Configurations
+{
+    public class ClassesConfigurations : IEntityTypeConfiguration<Classes>
+    {
+        public void Configure(EntityTypeBuilder<Classes> builder)
+        {
+            builder.Property(i => i.Id).ValueGeneratedOnAdd();
+            builder.HasOne(i => i.School)
+                .WithMany(p => p.Classes)
+                .HasForeignKey(i => i.SchoolId)
+                .OnDelete(DeleteBehavior.Cascade);
+        }
+    }
+}
