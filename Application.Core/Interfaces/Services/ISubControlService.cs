@@ -16,5 +16,6 @@ namespace Application.Core.Interfaces.Services
         Task<ErrorResponce> AddExamResult(string Token, AddExamResultView view);
         Task<ErrorResponce> ViewStudentData(string Token, int Code);
         Task<List<string>> GetAllFileNamesInFolder();
+        Task<List<HallSammryData>> HallSummryDatas(long SchoolId);
     }
 }

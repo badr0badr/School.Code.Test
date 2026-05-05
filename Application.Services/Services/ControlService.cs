@@ -36,7 +36,7 @@ namespace Application.Services.Services
             unitOfWork = _unitOfWork;
             context = _context;
         }
-        //Manger   Adder   Viewer  Controller
+        //Manger   Adder   Viewer  ControlManager
         public async Task<List<IdStringNameView>> GetControlTypes()
         {
             var controlTypes = new List<IdStringNameView>
@@ -349,11 +349,11 @@ namespace Application.Services.Services
                 ReportName = $"Halls Sheet {students.First().Id}_{view.SchoolId}.pdf",
                 Halls = Halls
             };
-            var result = CeratePdf(data, school.Name, CM.Name, SM.Name);
+            var result = CeratePdf(data, school.Name, CM.Name, SM.Name,view.ClassName);
             if (result) return data;
             throw new Exception("حدث خطأ اثناء انشاء الامتحانات");
         }
-        private bool CeratePdf(StudentsPlaceNumbers data, string SchoolName, string CMName, string SMName)
+        private bool CeratePdf(StudentsPlaceNumbers data, string SchoolName, string CMName, string SMName,string ClassName)
         {
             QuestPDF.Settings.License = LicenseType.Community;
             var FolderName = Path.Combine("wwwroot", "Resources", "PDFs");
@@ -429,6 +429,7 @@ namespace Application.Services.Services
                                     });
                                     TH.Cell().AlignBottom().AlignCenter().Text("");
                                     TH.Cell().AlignBottom().AlignCenter().Text($"كشف {data.Halls[i].HallName}").FontSize(12);
+                                    TH.Cell().AlignBottom().AlignCenter().Text($"الصف {ClassName}").FontSize(12);
                                     TH.Cell().AlignBottom().AlignCenter().Text("");
                                     TH.Cell().AlignCenter().Table(Tb =>
                                     {
@@ -496,6 +497,7 @@ namespace Application.Services.Services
                                         });
                                         TH.Cell().AlignBottom().AlignCenter().Text("");
                                         TH.Cell().AlignBottom().AlignCenter().Text($"كشف {data.Halls[i].HallName}").FontSize(12);
+                                        TH.Cell().AlignBottom().AlignCenter().Text($"الصف {ClassName}").FontSize(12);
                                         TH.Cell().AlignBottom().AlignCenter().Text("");
                                         TH.Cell().AlignCenter().Table(Tb =>
                                         {

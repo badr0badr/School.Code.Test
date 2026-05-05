@@ -7,6 +7,7 @@ using Application.Core.Views.Control;
 using Application.Core.Views.Other;
 using Application.Repository.Data.Contexts;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -80,7 +81,6 @@ namespace Application.Services.Services
                         SubjectId = view.SubjectId,
                         Term = 2
                     });
-
                 }
                 else
                 {
@@ -156,6 +156,54 @@ namespace Application.Services.Services
             }
             var fileNames = Directory.GetFiles(FolderName).Select(Path.GetFileName).ToList();
             return await Task.FromResult(fileNames);
+        }
+        public async Task<List<HallSammryData>> HallSummryDatas(long SchoolId)
+        {
+            var School = await context.School.AsNoTracking().FirstOrDefaultAsync(p => p.Id == SchoolId);
+            if (School == null) throw new Exception("خطأ في الحفظ , تاكد من ادخال جميع البيانات");
+            var CM = await context.Teacher.AsNoTracking().FirstOrDefaultAsync(p => p.SchoolId == SchoolId && p.ControlType == "ControlManager");
+            var SM = await context.Teacher.AsNoTracking().FirstOrDefaultAsync(p => p.SchoolId == SchoolId && p.RoleId == "Manager");
+            if (CM == null) throw new Exception("خطأ في الحفظ , تاكد من ادخال جميع البيانات");
+            if (SM == null) throw new Exception("خطأ في الحفظ , تاكد من ادخال جميع البيانات");
+            var ClassNames = await context.Classes.AsNoTracking()
+                                                .Where(p => p.SchoolId == SchoolId)
+                                                .OrderBy(p => p.ClassType)
+                                                .ThenBy(p => p.Class)
+                                                .ThenBy(p => p.ClassNumber)
+                                                .Select(p => p.Name)
+                                                .Distinct()
+                                                .ToListAsync();
+            var Students = await context.Student.AsNoTracking()
+                                              .Include(p => p.Class)
+                                              .Where(p => p.Class.SchoolId == SchoolId)
+                                              .Select(p => new
+                                              {
+                                                  p.Id,
+                                                  p.HallNumber,
+                                                  ClassName = p.Class.Name
+                                              })
+                                              .ToListAsync();
+            var MaxHall = await context.Student.AsNoTracking().Where(p => p.Class.SchoolId == SchoolId).MaxAsync(p => p.HallNumber);
+            var Result = new List<HallSammryData>();
+            foreach (var ClassName in ClassNames)
+            {
+                for (int i = 1; i <= MaxHall; i++)
+                {
+                    var sts = Students.Where(p => p.ClassName == ClassName && p.HallNumber == i).ToList();
+                    Result.Add(new HallSammryData()
+                    {
+                        HallNumber = i,
+                        ClassName = ClassName,
+                        CM = CM.Name,
+                        SM = SM.Name,
+                        SchoolName = School.Name,
+                        From = sts.Min(p => p.HallNumber),
+                        To = sts.Max(p => p.HallNumber),
+                        StudentsCount = sts.Count()
+                    });
+                }
+            }
+            return Result;
         }
         #endregion
     }

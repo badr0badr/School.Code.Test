@@ -108,4 +108,15 @@ namespace Application.Core.Views.Control
         public int PlaceNumber { get; set; }
         public int PlaceInHall { get; set; }
     }
+    public class HallSammryData
+    {
+        public string SchoolName { get; set; }  
+        public int HallNumber { get; set; }
+        public string ClassName { get; set; }
+        public int From { get; set; }
+        public int To { get; set; }
+        public int StudentsCount { get; set; }
+        public string CM { get; set; }
+        public string SM { get; set; }
+    }
 }

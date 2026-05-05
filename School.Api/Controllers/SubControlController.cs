@@ -55,6 +55,20 @@ namespace School.Api.Controllers
                 return BadRequest(new ApiError(StatusCodes.Status404NotFound, ex.Message));
             }
         }
+        [ProducesResponseType(typeof(List<HallSammryData>), 200)]
+        [EndpointSummary("SchoolId")]
+        [HttpPost("HallSummryDatas")]
+        public async Task<IActionResult> HallSummryDatas(RequestView<long> view)
+        {
+            try
+            {
+                return Ok(await subControlService.HallSummryDatas(view.Request));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError(StatusCodes.Status404NotFound, ex.Message));
+            }
+        }
 
 
 
