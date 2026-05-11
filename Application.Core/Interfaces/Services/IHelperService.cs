@@ -26,5 +26,6 @@ namespace Application.Core.Interfaces.Services
         Task<List<GetSchoolView>> GetSchools();
         Task<List<IdNumberNameView>> GetAllTeacherTitles();
         Task<List<IdNumberNameView>> GetTeachers(long SchoolId);
+        Task<List<IdNumberNameView>> GetAllTeachers(long SchoolId);
     }
 }

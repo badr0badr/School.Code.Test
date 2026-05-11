@@ -129,6 +129,20 @@ namespace School.Api.Controllers
         }
         [ProducesResponseType(typeof(List<IdNumberNameView>), 200)]
         [EndpointSummary("SchoolId")]
+        [HttpPost("GetAllTeachers")]
+        public async Task<IActionResult> GetAllTeachers(RequestView<long> view)
+        {
+            try
+            {
+                return Ok(await helperService.GetAllTeachers(view.Request));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError(StatusCodes.Status404NotFound, ex.Message));
+            }
+        }
+        [ProducesResponseType(typeof(List<IdNumberNameView>), 200)]
+        [EndpointSummary("SchoolId")]
         [HttpPost("GetSubjectsInSchool")]
         public async Task<IActionResult> GetSubjectsInSchool(RequestView<long> view)
         {

@@ -152,20 +152,20 @@ namespace School.Api.Controllers
                 return BadRequest(new ApiError(StatusCodes.Status404NotFound, ex.Message));
             }
         }
-        //[ProducesResponseType(typeof(ErrorResponce), 200)]
-        //[EndpointSummary("SchoolId")]
-        //[HttpPost("DeleteSecriteCodes")]
-        //public async Task<IActionResult> DeleteSecriteCodes(RequestView<long> view)
-        //{
-        //    try
-        //    {
-        //        return Ok(await controlService.DeleteSecriteCodes(view.Request));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(new ApiError(StatusCodes.Status404NotFound, ex.Message));
-        //    }
-        //}
+        [ProducesResponseType(typeof(ErrorResponce), 200)]
+        [EndpointSummary("SchoolId")]
+        [HttpPost("DeleteSecriteCodes")]
+        public async Task<IActionResult> DeleteSecriteCodes(RequestView<long> view)
+        {
+            try
+            {
+                return Ok(await controlService.DeleteSecriteCodes(view.Request));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError(StatusCodes.Status404NotFound, ex.Message));
+            }
+        }
         [ProducesResponseType(typeof(StudentsPlaceNumbers), 200)]
         [HttpPost("GetPlaceNumbers")]
         public async Task<IActionResult> GetPlaceNumbers(RequestView<GetPlaceNumbersView> view)
@@ -228,6 +228,19 @@ namespace School.Api.Controllers
             try
             {
                 return Ok(await controlService.GetExamTempltesModel(view.Request));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError(StatusCodes.Status404NotFound, ex.Message));
+            }
+        }
+        [ProducesResponseType(typeof(FinalAvargeData), 200)]
+        [HttpPost("GetSheetPaper")]
+        public async Task<IActionResult> GetSheetPaper(RequestView<FinalAvargeView> view)
+        {
+            try
+            {
+                return Ok(await controlService.GetSheetPaper(view.Request));
             }
             catch (Exception ex)
             {

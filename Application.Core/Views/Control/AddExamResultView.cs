@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Application.Core.Views.Other;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -36,6 +37,7 @@ namespace Application.Core.Views.Control
     }
     public class MerrorPdfData
     {
+        public long Id { get; set; }
         public long StudentId { get; set; }
         public string StudentName { get; set; }
         public string MargeType { get; set; }
@@ -110,7 +112,7 @@ namespace Application.Core.Views.Control
     }
     public class HallSammryData
     {
-        public string SchoolName { get; set; }  
+        public string SchoolName { get; set; }
         public int HallNumber { get; set; }
         public string ClassName { get; set; }
         public int From { get; set; }
@@ -118,5 +120,55 @@ namespace Application.Core.Views.Control
         public int StudentsCount { get; set; }
         public string CM { get; set; }
         public string SM { get; set; }
+    }
+    public class StudentTackit
+    {
+        public string StudentName { get; set; }
+        public int HallNumber { get; set; }
+        public int PlaceNumber { get; set; }
+        public string ClassName { get; set; }
+        public string SchoolName { get; set; }
+    }
+
+
+
+
+
+
+    public class StudentSubjectAvarge
+    {
+        public long Code { get; set; }
+        public long SubjectId { get; set; }
+        public double Review { get; set; } = 0;
+        public double Behavior { get; set; } = 0;
+        public double Homework { get; set; } = 0;
+        public double Exam { get; set; } = 0;
+    }
+    public class FinalAvargeData
+    {
+        public List<IdNumberNameView> MainSubjects { get; set; } = new();
+        public List<IdNumberNameView> SubSubjects { get; set; } = new();
+        public List<StudentSubjectAvarge> StudentsData { get; set; } = new();
+        public string CM { get; set; }
+        public string SM { get; set; }
+    }
+    public class GetExamAbsentView
+    {
+        public string ClassName { get; set; }
+        public int HallNumber { get; set; }
+        public long SubjectId { get; set; }
+    }
+    public class StudentExamAbsentData
+    {
+        public long Id { get; set; }
+        public string Name { get; set; }
+        public bool IsExist { get; set; }
+    }
+    public class SaveExamAbsentView
+    {
+        public string ClassName { get; set; }
+        public int HallNumber { get; set; }
+        public long SubjectId { get; set; }
+        public List<StudentExamAbsentData> Students {  get; set; } = new();
     }
 }

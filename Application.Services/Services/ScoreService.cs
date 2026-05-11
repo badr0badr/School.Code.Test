@@ -144,7 +144,7 @@ namespace Application.Services.Services
                                                                               p.Month == ExamSetting.Month);
 
             if (existingScore.Count() == 0 && existingScoreCount > 0) throw new Exception("تم رفع الإمتحان مسبقأ");
-            if (existingScore.Count() == 0) throw new Exception("لم يتم فتح رصد الإمتحانات بعد");
+            if (existingScore.Count() == 0) throw new Exception("سوف يتم فتح رصد الإمتحان بعد تسجيل الغياب");
             var Studentcount = await context.Student.CountAsync(p => p.ClassId == TC.ClassId);
             if (existingScore.Count() == Studentcount)
             {

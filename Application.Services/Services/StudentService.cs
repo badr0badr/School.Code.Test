@@ -6,7 +6,9 @@ using Application.Core.Specifications;
 using Application.Core.Views.Other;
 using Application.Core.Views.Student;
 using Application.Core.Views.Teacher;
+using Application.Repository.Data.Contexts;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using QuestPDF.Companion;
 using QuestPDF.Fluent;
@@ -23,9 +25,12 @@ namespace Application.Services.Services
     public class StudentService : IStudentService
     {
         private readonly IUnitOfWork unitOfWork;
-        public StudentService(IUnitOfWork _unitOfWork)
+        private readonly AppDbContext context;
+
+        public StudentService(IUnitOfWork _unitOfWork, AppDbContext _context)
         {
             unitOfWork = _unitOfWork;
+            context = _context;
         }
         private bool CeratePdf(GetAllStudentStaticsSchoolData data, string FileName, string header, string SchoolName)
         {
@@ -293,6 +298,8 @@ namespace Application.Services.Services
         public async Task<ErrorResponce> AddStudent(AddStudentView Addstudent)
         {
             if (Addstudent is null) return new ErrorResponce(400, "تاكد من ادخال جميع البيانات");
+            var Class = await context.Classes.AsNoTracking().FirstOrDefaultAsync(p => p.Id == Addstudent.ClassId);
+            if (Class == null) return new ErrorResponce(400, "تاكد من ادخال جميع البيانات");
             await unitOfWork.Repository<Student, long>().AddAsync(new Student()
             {
                 Name = Addstudent.Name,
@@ -301,7 +308,10 @@ namespace Application.Services.Services
                 Religion = Addstudent.Religion,
                 Status = Addstudent.Status,
                 MargeType = Addstudent.MargeType ?? "طبيعي",
-                IsDeleted = false
+                IsDeleted = false,
+                IsHome= false,
+                SchoolId= Class.SchoolId,
+                ClassName=Class.Name
             });
             var result = await unitOfWork.SaveChangesAsync();
             if (result > 0) return new ErrorResponce(200, "تم اضافه الطالب");
@@ -312,6 +322,8 @@ namespace Application.Services.Services
             if (Addstudent is null) return new ErrorResponce(400, "تاكد من ادخال جميع البيانات");
             foreach (var item in Addstudent)
             {
+                var Class = await context.Classes.AsNoTracking().FirstOrDefaultAsync(p => p.Id == item.ClassId);
+                if (Class == null) return new ErrorResponce(400, "تاكد من ادخال جميع البيانات");
                 await unitOfWork.Repository<Student, long>().AddAsync(new Student()
                 {
                     Name = item.Name,
@@ -320,7 +332,10 @@ namespace Application.Services.Services
                     Religion = item.Religion,
                     Status = item.Status,
                     MargeType = item.MargeType ?? "طبيعي",
-                    IsDeleted = false
+                    IsDeleted = false,
+                    IsHome = false,
+                    SchoolId = Class.SchoolId,
+                    ClassName = Class.Name
                 });
             }
             var result = await unitOfWork.SaveChangesAsync();
@@ -378,20 +393,21 @@ namespace Application.Services.Services
         {
             var Student = await unitOfWork.Repository<Student, long>().GetByIdAsync(new StudentSpecification(view.Id));
             if (Student is null) return new ErrorResponce(400, "هذا الطالب غير موجود");
+            if(view.ClassId == null) return new ErrorResponce(400, "تاكد من ادخال جميع البيانات");
             if (view.ClassId == Student.ClassId) return new ErrorResponce(400, "الطالب موجود في هذا الفصل يجب تغيير الفصل");
             foreach (var item in Student.Scores)
             {
-                item.ClassId = view.ClassId ?? Student.ClassId;
+                item.ClassId = view.ClassId.Value;
                 unitOfWork.Repository<StudentScoreData, long>().Update(item);
             }
             foreach (var item in Student.Exams)
             {
-                item.ClassId = view.ClassId ?? Student.ClassId;
+                item.ClassId = view.ClassId.Value;
                 unitOfWork.Repository<StudentExamScoreData, long>().Update(item);
             }
             foreach (var item in Student.Absents)
             {
-                item.ClassId = view.ClassId ?? Student.ClassId;
+                item.ClassId = view.ClassId.Value;
                 unitOfWork.Repository<StudentAbsentData, long>().Update(item);
             }
             Student.ClassId = view.ClassId ?? Student.ClassId;

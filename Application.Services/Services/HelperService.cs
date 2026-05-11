@@ -275,5 +275,19 @@ namespace Application.Services.Services
                 Id = p.Id
             }).ToList();
         }
+        public async Task<List<IdNumberNameView>> GetAllTeachers(long SchoolId)
+        {
+            var teachers = await unitOfWork.Repository<Teacher, long>().GetAllAsync(new TeacherSpecification(new TeacherParams()
+            {
+                SchoolId = SchoolId
+            }));
+            teachers = teachers.Where(p => p.RoleId != "Manager");
+            if (teachers is null) throw new NotImplementedException("لا يوجد معلمين في هذه المدرسة");
+            return teachers.OrderBy(p => p.Role.Index).ThenBy(p => p.Name).Select(p => new IdNumberNameView()
+            {
+                Name = p.Name,
+                Id = p.Id
+            }).ToList();
+        }
     }
 }

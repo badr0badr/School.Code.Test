@@ -205,4 +205,42 @@ namespace Application.Core.Views.Reports
         public double Exam1 { get; set; }
         public double Exam2 { get; set; }
     }
+    public class ClassSubjectsDashBord
+    {
+        public string ClassName { get; set; }
+        public List<SubjectDashBord> Subjects { get; set; }
+    }
+    public class SubjectDashBord
+    {
+        public string SubjectName { get; set; }
+        public sbyte Stage1 { get; set; }
+        public sbyte Stage2 { get; set; }
+        public sbyte Stage3 { get; set; }
+        public sbyte Stage4 { get; set; }
+        public sbyte Stage5 { get; set; }
+    }
+    public class FinalAvargeView
+    {
+        public string ClassName { get; set; }
+        public long SchoolId { get; set; }
+    }
+    public class HandlingExamPapersToRateView
+    {
+        public string ClassName { get; set; }
+        public long SchoolId { get; set; }
+        public long SubjectId { get; set; }
+    }
+    public class HandlingExamPapersToRateData
+    {
+        public string ControlManager { get; set; }
+        public string SchoolManager { get; set; }
+        public string SubjectName { get; set; }
+        public string SchoolName { get; set; }
+        public string Day { get; set; }
+        public string Date { get; set; }
+        public string ClassName { get; set; }
+        public string SubjectManager { get; set; }
+        public List<IdNumberNameView> Models { get; set; } = new();
+    }
+
 }

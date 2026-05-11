@@ -27,5 +27,6 @@ namespace Application.Core.Interfaces.Services
         Task<ErrorResponce> DeletePreparingExam(long SchoolId);
         Task<List<MerrorPdfData>> MerrorData(MerrorDataView view);
         Task<List<ExamTempltesModelData>> GetExamTempltesModel(long schoolId);
+        Task<FinalAvargeData> GetSheetPaper(FinalAvargeView view);
     }
 }

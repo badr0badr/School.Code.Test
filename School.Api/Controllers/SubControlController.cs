@@ -2,6 +2,7 @@
 using Application.Core.Interfaces.Services;
 using Application.Core.Views.Control;
 using Application.Core.Views.Other;
+using Application.Core.Views.Reports;
 using Application.Core.Views.Score;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -22,7 +23,7 @@ namespace School.Api.Controllers
         {
             try
             {
-                return Ok(await subControlService.SaveStudentsForAppliedExam(view.Request));
+                return Ok(await subControlService.SaveStudentsForAppliedExam(view.Token,view.Request));
             }
             catch (Exception ex)
             {
@@ -35,7 +36,7 @@ namespace School.Api.Controllers
         {
             try
             {
-                return Ok(await subControlService.GetStudentsForAppliedExam(view.Request));
+                return Ok(await subControlService.GetStudentsForAppliedExam(view.Token, view.Request));
             }
             catch (Exception ex)
             {
@@ -48,7 +49,7 @@ namespace School.Api.Controllers
         {
             try
             {
-                return Ok(await subControlService.GetAllFileNamesInFolder());
+                return Ok(await subControlService.GetAllFileNamesInFolder(view.Token));
             }
             catch (Exception ex)
             {
@@ -62,13 +63,111 @@ namespace School.Api.Controllers
         {
             try
             {
-                return Ok(await subControlService.HallSummryDatas(view.Request));
+                return Ok(await subControlService.HallSummryDatas(view.Token,view.Request));
             }
             catch (Exception ex)
             {
                 return BadRequest(new ApiError(StatusCodes.Status404NotFound, ex.Message));
             }
         }
+        [ProducesResponseType(typeof(List<HallSammryData>), 200)]
+        [EndpointSummary("SchoolId")]
+        [HttpPost("GetStudentTackits")]
+        public async Task<IActionResult> GetStudentTackits(RequestView<long> view)
+        {
+            try
+            {
+                return Ok(await subControlService.GetStudentTackits(view.Token, view.Request));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError(StatusCodes.Status404NotFound, ex.Message));
+            }
+        }
+        [ProducesResponseType(typeof(ErrorResponce), 200)]
+        [EndpointSummary("Code")]
+        [HttpPost("CheakCode")]
+        public async Task<IActionResult> CheakCode(RequestView<long> view)
+        {
+            try
+            {
+                return Ok(await subControlService.CheakCode(view.Token,view.Request));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError(StatusCodes.Status404NotFound, ex.Message));
+            }
+        }
+        [ProducesResponseType(typeof(ErrorResponce), 200)]
+        [EndpointSummary("Code")]
+        [HttpPost("ViewStudentData")]
+        public async Task<IActionResult> ViewStudentData(RequestView<long> view)
+        {
+            try
+            {
+                return Ok(await subControlService.ViewStudentData(view.Token,view.Request));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError(StatusCodes.Status404NotFound, ex.Message));
+            }
+        }
+        [ProducesResponseType(typeof(ErrorResponce), 200)]
+        [HttpPost("AddExamResult")]
+        public async Task<IActionResult> AddExamResult(RequestView<AddExamResultView> view)
+        {
+            try
+            {
+                return Ok(await subControlService.AddExamResult(view.Token,view.Request));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError(StatusCodes.Status404NotFound, ex.Message));
+            }
+        }
+        [ProducesResponseType(typeof(List<StudentExamAbsentData>), 200)]
+        [HttpPost("GetExamAbsent")]
+        public async Task<IActionResult> GetExamAbsent(RequestView<GetExamAbsentView> view)
+        {
+            try
+            {
+                return Ok(await subControlService.GetExamAbsent(view.Token, view.Request));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError(StatusCodes.Status404NotFound, ex.Message));
+            }
+        }
+        [ProducesResponseType(typeof(List<StudentExamAbsentData>), 200)]
+        [HttpPost("SaveExamAbsent")]
+        public async Task<IActionResult> SaveExamAbsent(RequestView<SaveExamAbsentView> view)
+        {
+            try
+            {
+                return Ok(await subControlService.SaveExamAbsent(view.Token, view.Request));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError(StatusCodes.Status404NotFound, ex.Message));
+            }
+        }
+        [ProducesResponseType(typeof(HandlingExamPapersToRateData), 200)]
+        [HttpPost("HandlingExamPapersToRate")]
+        public async Task<IActionResult> HandlingExamPapersToRate(RequestView<HandlingExamPapersToRateView> view)
+        {
+            try
+            {
+                return Ok(await subControlService.HandlingExamPapersToRate(view.Token, view.Request));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiError(StatusCodes.Status404NotFound, ex.Message));
+            }
+        }
+
+
+
+
 
 
 

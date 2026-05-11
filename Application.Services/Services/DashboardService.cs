@@ -1031,7 +1031,7 @@ namespace Application.Services.Services
                 var record = new StudentMonthlyReport()
                 {
                     ClassName = student.Class.Name,
-                    ClassId = student.ClassId,
+                    ClassId = student.ClassId.Value,
                     MonthName = DateHelper.MonthNameAr(view.Month),
                     StudentName = student.Name,
                     Absent = Math.Round((1 - ((double)days / (double)CerSet.Week.Index / 7)) * 100, 0)

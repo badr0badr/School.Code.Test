@@ -19,6 +19,7 @@ namespace Application.Core.Entities
         public int Code { get; set; }
         [Column(TypeName = AppDefults.DecimalColumnType)]
         public double Result { get; set; }
+        public bool IsExist { get; set; }
 
     }
 }

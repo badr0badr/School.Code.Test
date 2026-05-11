@@ -18,6 +18,7 @@ using QuestPDF.Infrastructure;
 using QuestPDF.Previewer;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
@@ -141,28 +142,27 @@ namespace Application.Services.Services
         {
             var examCodes = await context.ExamCodes.Where(p => p.SchoolId == SchoolId).ToListAsync();
             if (examCodes.Count > 0) return new ErrorResponce(404, "يوجد أكواد سرية في المدرسة");
-            var classesName = await unitOfWork.Repository<Classes, long>().GetAllNoTrackingAsync(new ClassesSpecification(new ClassesParams()
-            {
-                SchoolId = SchoolId
-            }, false));
-            if (classesName is null) throw new Exception("لا يوجد فصول");
-            var ClassName = classesName.OrderBy(p => p.ClassType)
-                                       .ThenBy(p => p.Class)
-                                       .ThenBy(p => p.ClassNumber)
-                                       .DistinctBy(p => p.Name)
-                                       .Select(p => p.Name)
-                                       .ToList();
+            var ClassName = await context.Classes.AsNoTracking()
+                                                 .Where(p => p.SchoolId == SchoolId)
+                                                 .OrderBy(p => p.ClassType)
+                                                 .ThenBy(p => p.Class)
+                                                 .ThenBy(p => p.ClassNumber)
+                                                 .Select(p => p.Name)
+                                                 .Distinct()
+                                                 .ToListAsync();
             if (ClassName.Count == 0) return new ErrorResponce(404, "لا توجد فصول في المدرسة");
-            var TC = await context.TeacherClasses.AsNoTracking()
+            var subjects = await context.TeacherClasses.AsNoTracking()
                                                  .Include(p => p.Subject)
                                                  .Where(p => p.Class.SchoolId == SchoolId && p.Subject.Status != "Off")
                                                  .OrderBy(p => p.Subject.Index)
+                                                 .Select(p => p.Subject)
+                                                 .Distinct()
                                                  .ToListAsync();
-            var subjects = TC.DistinctBy(p => p.SubjectId).Select(p => p.Subject).ToList();
             foreach (var name in ClassName)
             {
                 var students = await context.Student.AsNoTracking()
-                                                    .Where(p => p.Class.SchoolId == SchoolId && p.Class.Name == name)
+                                                    .Where(p => (p.Class.SchoolId == SchoolId  || p.SchoolId==SchoolId) &&
+                                                               (p.Class.Name == name || p.ClassName == name))
                                                     .Select(p => p.Id)
                                                     .ToListAsync();
                 if (students.Count == 0) continue;
@@ -173,7 +173,7 @@ namespace Application.Services.Services
                     {
                         await unitOfWork.Repository<ExamCodes, long>().AddAsync(new ExamCodes()
                         {
-                            Code = i,
+                            Code = i + 1,
                             StudentId = Nstudents[i],
                             SchoolId = SchoolId,
                             SubjectId = subject.Id,
@@ -320,7 +320,10 @@ namespace Application.Services.Services
         }
         public async Task<StudentsPlaceNumbers> GetPlaceNumbers(GetPlaceNumbersView view)
         {
-            var students = await context.Student.Where(p => p.Class.SchoolId == view.SchoolId && p.Class.Name == view.ClassName).ToListAsync();
+            var students = await context.Student.AsNoTracking()
+                                                .Where(p => (p.Class.SchoolId == view.SchoolId || p.SchoolId ==view.SchoolId) &&
+                                                           (p.Class.Name == view.ClassName || p.ClassName == view.ClassName))
+                                                .ToListAsync();
             if (students.Count == 0) throw new Exception("لا توجد طلاب في الفصل");
             var school = await context.School.AsNoTracking().FirstOrDefaultAsync(p => p.Id == view.SchoolId);
             if (school == null) throw new Exception("المدرسة غير موجودة");
@@ -349,11 +352,11 @@ namespace Application.Services.Services
                 ReportName = $"Halls Sheet {students.First().Id}_{view.SchoolId}.pdf",
                 Halls = Halls
             };
-            var result = CeratePdf(data, school.Name, CM.Name, SM.Name,view.ClassName);
+            var result = CeratePdf(data, school.Name, CM.Name, SM.Name, view.ClassName);
             if (result) return data;
             throw new Exception("حدث خطأ اثناء انشاء الامتحانات");
         }
-        private bool CeratePdf(StudentsPlaceNumbers data, string SchoolName, string CMName, string SMName,string ClassName)
+        private bool CeratePdf(StudentsPlaceNumbers data, string SchoolName, string CMName, string SMName, string ClassName)
         {
             QuestPDF.Settings.License = LicenseType.Community;
             var FolderName = Path.Combine("wwwroot", "Resources", "PDFs");
@@ -593,7 +596,8 @@ namespace Application.Services.Services
             if (school == null) throw new Exception("تاكد من ادخال جميع البيانات");
             var Students = await context.Student.AsNoTracking()
                                                 .Include(p => p.Class)
-                                                .Where(p => p.Class.SchoolId == view.SchoolId && p.Class.Name == view.ClassName)
+                                                .Where(p => (p.Class.SchoolId ==view.SchoolId || p.SchoolId ==view.SchoolId) &&
+                                                           (p.Class.Name == view.ClassName || p.ClassName == view.ClassName))
                                                 .Select(p => new
                                                 {
                                                     p.Id,
@@ -626,6 +630,7 @@ namespace Application.Services.Services
                     throw new Exception($"الطالب : {student.Name} في الصف {view.ClassName} في المادة {subject.Name} ليس لدية رقم سري برجاء إعادة إنشاء الارقام السرية");
                 Data.Add(new MerrorPdfData()
                 {
+                    Id = Secrite.Id,
                     ClassName = view.ClassName,
                     ExamTemplte = Leters(student.ExamTemplte),
                     PlaceNumber = student.PlaceNumber,
@@ -672,7 +677,7 @@ namespace Application.Services.Services
         private byte[] GenerateQrCodes(long code)
         {
             string textCode = $"{code}";
-            using var qrData = _qrGenerator.CreateQrCode(textCode, QRCodeGenerator.ECCLevel.M);
+            using var qrData = _qrGenerator.CreateQrCode(textCode, QRCodeGenerator.ECCLevel.Q);
             using var qrCode = new PngByteQRCode(qrData);
             return qrCode.GetGraphic(20, new byte[] { 0, 0, 0 }, new byte[] { 255, 255, 255 });
         }
@@ -719,6 +724,113 @@ namespace Application.Services.Services
                 data.Add(result);
             }
             return data;
+        }
+        public async Task<FinalAvargeData> GetSheetPaper(FinalAvargeView view)
+        {
+            var CM = await context.Teacher.AsNoTracking().FirstOrDefaultAsync(p => p.SchoolId ==view.SchoolId && p.ControlType == "ControlManager");
+            var SM = await context.Teacher.AsNoTracking().FirstOrDefaultAsync(p => p.SchoolId == view.SchoolId && p.RoleId == "Manager");
+            if (CM == null) throw new Exception("خطأ في الحفظ , تاكد من ادخال جميع البيانات");
+            if (SM == null) throw new Exception("خطأ في الحفظ , تاكد من ادخال جميع البيانات");
+            var students = await context.Student.AsNoTracking()
+                                                .Include(p => p.ExamCodes)
+                                                .Where(p => p.Class.Name == view.ClassName &&
+                                                            p.Class.SchoolId == view.SchoolId)
+                                                .ToListAsync();
+            var studentScores = await context.StudentScoreData.AsNoTracking()
+                                                              .Where(p => p.Class.SchoolId == view.SchoolId &&
+                                                                          p.Class.Name == view.ClassName)
+                                                              .ToListAsync();
+            var StudentAbsents = await context.StudentAbsentCases.AsNoTracking()
+                                                                     .Where(p => p.Student.ClassName == view.ClassName &&
+                                                                                 p.Student.SchoolId == view.SchoolId)
+                                                                     .ToListAsync();
+            var ExamScores = await context.StudentExamScoreData
+                                          .AsNoTracking()
+                                          .Where(p => p.Class.Name == view.ClassName &&
+                                                    p.Class.SchoolId == view.SchoolId)
+                                          .ToListAsync();
+            var OutWeeks = await context.OutOfScore.AsNoTracking()
+                                                       .Where(p => p.SchoolId == view.SchoolId &&
+                                                                   p.ClassName == view.ClassName)
+                                                       .ToListAsync();
+            var Subjects = await context.TeacherClasses.AsNoTracking()
+                                   .Where(p => p.Class.SchoolId == view.SchoolId && p.Subject.Status != "Off")
+                                   .Include(p => p.Subject)
+                                   .Select(p => p.Subject)
+                                   .Distinct()
+                                   .OrderBy(p => p.Index)
+                                   .ToListAsync();
+            var Weeks = await context.Week.AsNoTracking().Where(p => p.IsActive).ToListAsync();
+            var Result = new FinalAvargeData()
+            {
+                CM=CM.Name,
+                SM=SM.Name
+            };
+            Result.MainSubjects = Subjects.Where(P => P.Status == "In").Select(p => new IdNumberNameView()
+            {
+                Id = p.Id,
+                Name = p.Name,
+            }).ToList();
+            Result.SubSubjects = Subjects.Where(P => P.Status == "Out").Select(p => new IdNumberNameView()
+            {
+                Id = p.Id,
+                Name = p.Name,
+            }).ToList();
+            foreach (var student in students)
+            {
+                var studentWeeks = Weeks.Select(p => new
+                {
+                    p.Id,
+                    p.EndDate,
+                    p.StartDate,
+                    p.Index,
+                    p.Month,
+                    p.Name,
+                }).ToList();
+                var StudentAbsent = StudentAbsents.Where(p => p.StudentId == student.Id).ToList();
+                foreach (var abs in StudentAbsent)
+                {
+                    var dates = studentWeeks.Where(w => (abs.StartDate >= w.StartDate && abs.StartDate <= w.EndDate) ||
+                                (abs.EndDate >= w.StartDate && abs.EndDate <= w.EndDate) ||
+                                (abs.StartDate <= w.StartDate && abs.StartDate <= w.EndDate && abs.EndDate >= w.StartDate && abs.EndDate >= w.EndDate)).ToList();
+                    foreach (var date in dates) studentWeeks.RemoveAll(p => p.Id == date.Id);
+                }
+                foreach (var Subject in Subjects)
+                {
+                    var StudentScores = studentScores.Where(p => p.StudentId == student.Id && p.SubjectId == Subject.Id).ToList();
+                    var StudentExam = ExamScores.Where(p => p.StudentId == student.Id && p.SubjectId == Subject.Id).ToList();
+                    var code = student.ExamCodes.FirstOrDefault(p => p.SubjectId == Subject.Id);
+                    if (code == null) throw new Exception($"خطأ في السري للطالب {student.Name}");
+                    var SubjectData = new StudentSubjectAvarge()
+                    {
+                        Code = code.Code,
+                        SubjectId = Subject.Id,
+                        Exam = Math.Round(StudentExam.Sum(p => p.ExamResult) / StudentExam.Count(), 2)
+                    };
+                    if (studentWeeks.Count() > 0)
+                    {
+                        int ReviewInc = 0;
+                        foreach (var week in studentWeeks)
+                        {
+                            var ss = StudentScores.FirstOrDefault(p => p.WeekId == week.Id);
+                            if (ss == null) continue;
+                            SubjectData.Behavior += ss.Behavior;
+                            SubjectData.Homework += ss.Homework;
+                            if (!OutWeeks.Any(p => p.WeekId == week.Id))
+                            {
+                                SubjectData.Review += ss.Review;
+                                ReviewInc++;
+                            }
+                        }
+                        SubjectData.Behavior = Math.Round(SubjectData.Behavior / studentWeeks.Count(), 2);
+                        SubjectData.Homework = Math.Round(SubjectData.Homework / studentWeeks.Count(), 2);
+                        if (ReviewInc > 0) SubjectData.Review = Math.Round(SubjectData.Review / ReviewInc, 2);
+                        else SubjectData.Review = 0;
+                    }
+                    Result.StudentsData.Add(SubjectData);
+                }
+            }
+            return Result;
         }
     }
 }

@@ -15,7 +15,7 @@ namespace Application.Repository.Data.Configurations
         {
             builder.Property(i => i.Id).ValueGeneratedOnAdd();
             builder.HasOne(i => i.Student)
-                .WithMany()
+                .WithMany(i=>i.ExamCodes)
                 .HasForeignKey(i => i.StudentId)
                 .OnDelete(DeleteBehavior.Cascade);
             builder.HasOne(i => i.Subject)
